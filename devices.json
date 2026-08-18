@@ -1,0 +1,327 @@
+[
+  {
+    "id": "steam-deck-oled",
+    "name": "Steam Deck OLED",
+    "brand": "Valve",
+    "aliases": [
+      "SD",
+      "Deck",
+      "V社",
+      "OLED Deck"
+    ],
+    "price_cny": 4200,
+    "weight_g": 640,
+    "battery_wh": 50,
+    "estimated_battery_h": 6,
+    "year": 2023,
+    "category": "pc",
+    "screen": {
+      "size_inch": 7.4,
+      "type": "OLED",
+      "refresh_hz": 90,
+      "resolution": "1280x800",
+      "srgb_percent": 110
+    },
+    "hardware": {
+      "cpu": "AMD Sephiroth (Zen2 6nm)",
+      "gpu": "RDNA2 12CU",
+      "ram_gb": 16,
+      "storage_gb": 512,
+      "tdp_w": 15,
+      "architecture": "x86_64",
+      "tdp_min_w": 4,
+      "tdp_max_w": 15
+    },
+    "scores": {
+      "performance": 78,
+      "battery": 75,
+      "screen": 88,
+      "portability": 55,
+      "value": 80,
+      "cooling": 70
+    }
+  },
+  {
+    "id": "rog-ally-x",
+    "name": "ROG Ally X",
+    "brand": "ASUS",
+    "aliases": [
+      "AllyX",
+      "Ally X",
+      "华硕"
+    ],
+    "price_cny": 5800,
+    "weight_g": 678,
+    "battery_wh": 80,
+    "estimated_battery_h": 5,
+    "year": 2024,
+    "category": "pc",
+    "screen": {
+      "size_inch": 7,
+      "type": "IPS",
+      "refresh_hz": 120,
+      "resolution": "1920x1080",
+      "srgb_percent": 100
+    },
+    "hardware": {
+      "cpu": "AMD Ryzen Z1 Extreme",
+      "gpu": "RDNA3 12CU",
+      "ram_gb": 24,
+      "storage_gb": 1024,
+      "tdp_w": 30,
+      "architecture": "x86_64",
+      "tdp_min_w": 9,
+      "tdp_max_w": 30
+    },
+    "scores": {
+      "performance": 90,
+      "battery": 82,
+      "screen": 80,
+      "portability": 50,
+      "value": 70,
+      "cooling": 78
+    }
+  },
+  {
+    "id": "legion-go-2",
+    "name": "Legion Go 2",
+    "brand": "Lenovo",
+    "aliases": [
+      "Legion",
+      "拯救者"
+    ],
+    "price_cny": 5800,
+    "weight_g": 875,
+    "battery_wh": 74,
+    "estimated_battery_h": 4.5,
+    "year": 2026,
+    "category": "pc",
+    "screen": {
+      "size_inch": 8.8,
+      "type": "OLED",
+      "refresh_hz": 144,
+      "resolution": "2560x1600",
+      "srgb_percent": 110
+    },
+    "hardware": {
+      "cpu": "AMD Ryzen AI 9 HX 370",
+      "gpu": "RDNA3.5 16CU",
+      "ram_gb": 32,
+      "storage_gb": 1024,
+      "tdp_w": 33,
+      "architecture": "x86_64",
+      "tdp_min_w": 10,
+      "tdp_max_w": 35
+    },
+    "scores": {
+      "performance": 95,
+      "battery": 75,
+      "screen": 95,
+      "portability": 30,
+      "value": 65,
+      "cooling": 82
+    }
+  },
+  {
+    "id": "ayaneo-2s",
+    "name": "AYANEO 2S",
+    "brand": "AYANEO",
+    "aliases": [
+      "AYA",
+      "亚诺"
+    ],
+    "price_cny": 5500,
+    "weight_g": 670,
+    "battery_wh": 50.7,
+    "estimated_battery_h": 4,
+    "year": 2024,
+    "category": "pc",
+    "screen": {
+      "size_inch": 7,
+      "type": "IPS",
+      "refresh_hz": 120,
+      "resolution": "1920x1080",
+      "srgb_percent": 100
+    },
+    "hardware": {
+      "cpu": "AMD Ryzen 7 7840U",
+      "gpu": "RDNA3 12CU",
+      "ram_gb": 16,
+      "storage_gb": 512,
+      "tdp_w": 28,
+      "architecture": "x86_64",
+      "tdp_min_w": 8,
+      "tdp_max_w": 28
+    },
+    "scores": {
+      "performance": 88,
+      "battery": 65,
+      "screen": 80,
+      "portability": 50,
+      "value": 60,
+      "cooling": 70
+    }
+  },
+  {
+    "id": "gpd-win-4",
+    "name": "GPD WIN 4 (2025)",
+    "brand": "GPD",
+    "aliases": [
+      "WIN4",
+      "GPD"
+    ],
+    "price_cny": 5300,
+    "weight_g": 598,
+    "battery_wh": 45.6,
+    "estimated_battery_h": 3.5,
+    "year": 2025,
+    "category": "pc",
+    "screen": {
+      "size_inch": 6,
+      "type": "IPS",
+      "refresh_hz": 60,
+      "resolution": "1920x1080",
+      "srgb_percent": 100
+    },
+    "hardware": {
+      "cpu": "AMD Ryzen 7 8840U",
+      "gpu": "RDNA3 12CU",
+      "ram_gb": 16,
+      "storage_gb": 1024,
+      "tdp_w": 28,
+      "architecture": "x86_64",
+      "tdp_min_w": 8,
+      "tdp_max_w": 28
+    },
+    "scores": {
+      "performance": 85,
+      "battery": 60,
+      "screen": 70,
+      "portability": 70,
+      "value": 60,
+      "cooling": 65
+    }
+  },
+  {
+    "id": "switch-oled",
+    "name": "Switch OLED",
+    "brand": "Nintendo",
+    "aliases": [
+      "NS",
+      "NSO",
+      "Switch"
+    ],
+    "price_cny": 2200,
+    "weight_g": 420,
+    "battery_wh": 17.5,
+    "estimated_battery_h": 5,
+    "year": 2021,
+    "category": "console",
+    "screen": {
+      "size_inch": 7,
+      "type": "OLED",
+      "refresh_hz": 60,
+      "resolution": "1280x720",
+      "srgb_percent": 100
+    },
+    "hardware": {
+      "cpu": "NVIDIA Tegra X1+",
+      "gpu": "Maxwell 256CU",
+      "ram_gb": 4,
+      "storage_gb": 64,
+      "tdp_w": 7,
+      "architecture": "ARMv8",
+      "tdp_min_w": 3,
+      "tdp_max_w": 10
+    },
+    "scores": {
+      "performance": 45,
+      "battery": 70,
+      "screen": 78,
+      "portability": 90,
+      "value": 75,
+      "cooling": 95
+    }
+  },
+  {
+    "id": "miyoo-mini-plus",
+    "name": "Miyoo Mini Plus",
+    "brand": "Miyoo",
+    "aliases": [
+      "Miyoo+",
+      "Mini+",
+      "复古"
+    ],
+    "price_cny": 400,
+    "weight_g": 136,
+    "battery_wh": 8,
+    "estimated_battery_h": 7,
+    "year": 2024,
+    "category": "retro",
+    "screen": {
+      "size_inch": 3.5,
+      "type": "IPS",
+      "refresh_hz": 60,
+      "resolution": "640x480",
+      "srgb_percent": 90
+    },
+    "hardware": {
+      "cpu": "Allwinner A133",
+      "gpu": "PowerVR GE8300",
+      "ram_gb": 1,
+      "storage_gb": 64,
+      "tdp_w": 3,
+      "architecture": "ARMv7",
+      "tdp_min_w": 0.5,
+      "tdp_max_w": 3
+    },
+    "scores": {
+      "performance": 25,
+      "battery": 90,
+      "screen": 50,
+      "portability": 95,
+      "value": 95,
+      "cooling": 100
+    }
+  },
+  {
+    "id": "retroid-pocket-4-pro",
+    "name": "Retroid Pocket 4 Pro",
+    "brand": "Retroid",
+    "aliases": [
+      "RP4P",
+      "Retroid"
+    ],
+    "price_cny": 1300,
+    "weight_g": 380,
+    "battery_wh": 16,
+    "estimated_battery_h": 6,
+    "year": 2024,
+    "category": "retro",
+    "screen": {
+      "size_inch": 4.7,
+      "type": "IPS",
+      "refresh_hz": 60,
+      "resolution": "1280x960",
+      "srgb_percent": 95
+    },
+    "hardware": {
+      "cpu": "Dimensity 1100",
+      "gpu": "Mali-G77",
+      "ram_gb": 8,
+      "storage_gb": 128,
+      "tdp_w": 8,
+      "architecture": "ARMv8",
+      "tdp_min_w": 2,
+      "tdp_max_w": 10
+    },
+    "scores": {
+      "performance": 60,
+      "battery": 78,
+      "screen": 70,
+      "portability": 88,
+      "value": 92,
+      "cooling": 80
+    }
+  }
+]

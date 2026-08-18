@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Handheld Matrix v4.5 - 掌机多维对比仪表盘</title>
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0" async></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" async></script>
+  <link href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <!-- vanilla-tilt.js（GitHub: micku7zu/vanilla-tilt.js，MIT 协议，~9KB）
+       用于卡片的 Apple 风格鼠标 3D 倾斜 + 高光扫光(glare)效果。
+       注：本沙箱环境无法保证抓取到的文件字节与 CDN 实际下发内容完全一致，
+       故未填写 integrity 校验值，避免错误的 SRI 导致脚本被浏览器拦截。
+       正式对外发布前，建议到 https://cdnjs.com/libraries/vanilla-tilt 用
+       "Copy SRI Hash" 按钮取真实值补上 integrity 属性。 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js" crossorigin="anonymous" defer></script>
+  <style>
+:root {
+  --bg-primary: #f5f5f7;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0f0f5;
+  --bg-glass: rgba(255, 255, 255, 0.78);
+  --bg-glass-hover: rgba(255, 255, 255, 0.9);
+
+  --text-primary: #1d1d1f;
+  --text-secondary: #424245;
+  --text-muted: #86868b;
+  --text-accent: #007aff;
+
+  --accent-blue: #007aff;
+  --accent-blue-soft: rgba(0, 122, 255, 0.1);
+  --accent-orange: #ff5500;
+  --accent-orange-soft: rgba(255, 85, 0, 0.1);
+  --accent-pink: #ff2d55;
+  --accent-purple: #af52de;
+  --accent-green: #30d158;
+
+  --border-card: 2px solid #007aff;
+  --border-soft: 1px solid rgba(0,122,255,0.2);
+  --border-selected: 2px solid #ff5500;
+
+  --shadow-card: 6px 6px 0px rgba(0,122,255,0.2);
+  --shadow-hover: 12px 12px 0px rgba(0,122,255,0.3);
+  --shadow-soft: 0 4px 20px rgba(0,0,0,0.08);
+
+  --blur-amount: blur(12px) saturate(120%);
+  --score-gradient: repeating-linear-gradient(45deg, #007aff, #007aff 4px, #0052cc 4px, #0052cc 8px);
+
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+html[data-theme="dark"] {
+  --bg-primary: #05060d;
+  --bg-secondary: #0a0f1e;
+  --bg-tertiary: #0f1730;
+  --bg-glass: rgba(10, 15, 30, 0.7);
+  --bg-glass-hover: rgba(15, 23, 48, 0.85);
+
+  --text-primary: #c9faff;
+  --text-secondary: #9fd7e6;
+  --text-muted: #5a7b8a;
+  --text-accent: #00f6ff;
+
+  --accent-blue: #00f6ff;
+  --accent-blue-soft: rgba(0,246,255,0.15);
+  --accent-orange: #ff5500;
+  --accent-orange-soft: rgba(255,85,0,0.15);
+  --accent-pink: #ff2bd6;
+  --accent-purple: #8b5cf6;
+  --accent-green: #39ff14;
+
+  --border-card: 1px solid rgba(0,246,255,0.3);
+  --border-soft: 1px solid rgba(0,246,255,0.15);
+  --border-selected: 1px solid #ff2bd6;
+
+  --shadow-card: 0 0 24px rgba(0,246,255,0.15), inset 0 0 30px rgba(0,246,255,0.05);
+  --shadow-hover: 0 0 36px rgba(0,246,255,0.35), 0 0 72px rgba(139,92,246,0.2);
+  --shadow-soft: 0 0 20px rgba(0,0,0,0.3);
+
+  --blur-amount: blur(14px) saturate(140%);
+  --score-gradient: linear-gradient(90deg, #ff2bd6, #8b5cf6, #00f6ff);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  margin: 0; padding: 0; min-height: 100vh; background: var(--bg-primary);
+  color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Rajdhani, system-ui, sans-serif;
+  letter-spacing: -0.01em; overflow-x: hidden;
+}
+html { transition: background-color 0.4s var(--ease-standard), color 0.4s var(--ease-standard); }
+.init-loading {
+  position: fixed; inset: 0; display: flex; flex-direction: column; gap: 14px;
+  align-items: center; justify-content: center; background: var(--bg-primary);
+  color: var(--accent-blue); font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  z-index: 99999; opacity: 1; transition: opacity 0.25s ease-out;
+}
+.init-loading.hidden { opacity: 0; pointer-events: none; }
+.init-loading .boot-line { letter-spacing: 0.08em; }
+.init-loading .boot-line .cursor { display: inline-block; width: 7px; height: 13px; background: var(--accent-blue); margin-left: 3px; animation: boot-blink 0.9s steps(1) infinite; vertical-align: -2px; }
+.init-loading .boot-bar { width: 180px; height: 2px; background: rgba(0,122,255,0.15); overflow: hidden; border-radius: 2px; }
+.init-loading .boot-bar-fill { height: 100%; width: 30%; background: var(--accent-blue); animation: boot-scan 1.1s ease-in-out infinite; }
+@keyframes boot-blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
+@keyframes boot-scan { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
+@media (prefers-reduced-motion: reduce) {
+  .init-loading .boot-line .cursor { animation: none; opacity: 1; }
+  .init-loading .boot-bar-fill { animation: none; width: 100%; }
+}
+
+.app-header { position: relative; z-index: 10; padding: 16px 24px; border-bottom: 1px solid rgba(0, 122, 255, 0.15); background: var(--bg-glass); backdrop-filter: var(--blur-amount); -webkit-backdrop-filter: var(--blur-amount); }
+.header-inner { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.header-title { display: flex; flex-direction: column; gap: 4px; }
+.main-title { font-family: 'Orbitron', Rajdhani, sans-serif; font-size: clamp(20px, 3vw, 28px); letter-spacing: 0.25em; color: var(--text-accent); line-height: 1.2; }
+.main-title .version { color: var(--accent-orange); font-size: clamp(14px, 2vw, 18px); letter-spacing: 0.1em; }
+.subtitle { font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 11px; color: var(--text-muted); margin: 0; }
+.header-right { display: flex; align-items: center; gap: 16px; }
+.hud-clock { font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 11px; color: var(--text-muted); text-align: right; }
+.sys-status { font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 11px; color: var(--accent-orange); white-space: nowrap; }
+.theme-toggle { width: 44px; height: 44px; border: 1px solid rgba(0, 122, 255, 0.2); border-radius: 12px; background: var(--bg-secondary); color: var(--text-accent); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s var(--ease-spring), box-shadow 0.2s var(--ease-standard), border-color 0.2s var(--ease-standard), background 0.2s var(--ease-standard); position: relative; overflow: hidden; }
+.theme-toggle:hover { border-color: var(--accent-blue); background: var(--bg-glass-hover); transform: translateY(-2px); }
+html[data-theme="light"] .theme-toggle:hover { box-shadow: 6px 6px 0px rgba(0, 122, 255, 0.2); }
+html[data-theme="dark"] .theme-toggle:hover { box-shadow: 0 0 20px rgba(0, 246, 255, 0.3); }
+.theme-toggle:active { transform: translateY(0); }
+.theme-icon { width: 20px; height: 20px; transition: transform 0.3s var(--ease-spring); }
+.theme-toggle:hover .theme-icon { transform: rotate(30deg); }
+
+.main-content { position: relative; z-index: 10; max-width: 1400px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+.hud-panel { background: var(--bg-glass); backdrop-filter: var(--blur-amount); -webkit-backdrop-filter: var(--blur-amount); border: 1px solid rgba(0, 122, 255, 0.15); border-radius: 16px; padding: 20px; position: relative; }
+html[data-theme="light"] .hud-panel { box-shadow: var(--shadow-card); }
+html[data-theme="dark"] .hud-panel { box-shadow: var(--shadow-card); }
+.hud-label { font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; display: inline-block; }
+.hud-value { color: var(--accent-orange); font-size: 14px; }
+
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 12px; }
+.search-wrap { position: relative; display: flex; align-items: center; gap: 12px; }
+#search-input { width: 100%; background: var(--bg-secondary); border: 1px solid rgba(0, 122, 255, 0.15); border-radius: 12px; padding: 12px 16px; font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 13px; color: var(--text-primary); outline: none; transition: border-color 0.2s var(--ease-standard), box-shadow 0.2s var(--ease-standard), background 0.2s var(--ease-standard); }
+#search-input:focus { border-color: var(--accent-orange); }
+html[data-theme="light"] #search-input:focus { box-shadow: 4px 4px 0px rgba(255, 85, 0, 0.15); }
+html[data-theme="dark"] #search-input:focus { box-shadow: 0 0 16px rgba(255, 85, 0, 0.3); }
+#search-input::placeholder { color: var(--text-muted); opacity: 0.6; }
+
+.slider-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.slider-container { height: 32px; margin-top: 8px; display: flex; align-items: center; }
+.editable-label { font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 11px; color: var(--accent-orange); padding: 2px 8px; border: 1px dashed transparent; border-radius: 6px; cursor: text; transition: all 0.15s var(--ease-standard); }
+.editable-label:hover { border-color: var(--accent-orange); background: var(--accent-orange-soft); }
+
+.noUi-target { background: var(--bg-tertiary) !important; border: var(--border-soft) !important; height: 4px !important; border-radius: 2px !important; }
+.noUi-connect { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)) !important; border-radius: 2px !important; }
+html[data-theme="dark"] .noUi-connect { box-shadow: 0 0 8px rgba(0,246,255,0.4) !important; }
+.noUi-handle { width: 18px !important; height: 18px !important; right: -9px !important; top: -7px !important; border-radius: 50% !important; border: 2px solid var(--bg-primary) !important; background: var(--accent-blue) !important; box-shadow: 0 2px 6px rgba(0,0,0,0.15), 0 0 0 3px var(--accent-blue-soft) !important; cursor: grab !important; transition: transform 0.2s var(--ease-spring), box-shadow 0.2s; }
+.noUi-handle:hover { transform: scale(1.1); box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 0 5px var(--accent-blue-soft) !important; }
+.noUi-handle:active { cursor: grabbing; transform: scale(0.95); }
+.noUi-handle::before, .noUi-handle::after { display: none !important; }
+
+.command-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; align-items: center; }
+.cmd-chip { position: relative; overflow: hidden; cursor: pointer; padding: 6px 14px; border: 1px solid rgba(0, 122, 255, 0.15); border-radius: 20px; font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 11px; color: var(--text-accent); background: var(--bg-tertiary); transition: all 0.2s var(--ease-standard); user-select: none; white-space: nowrap; }
+.cmd-chip:hover { background: var(--accent-blue); color: var(--bg-primary); border-color: var(--accent-blue); }
+html[data-theme="light"] .cmd-chip:hover { box-shadow: 4px 4px 0px rgba(0, 122, 255, 0.2); }
+html[data-theme="dark"] .cmd-chip:hover { box-shadow: 0 0 16px var(--accent-blue); }
+.cmd-chip.active { background: var(--accent-orange); color: var(--bg-primary); border-color: var(--accent-orange); }
+html[data-theme="light"] .cmd-chip.active { box-shadow: 4px 4px 0px rgba(255, 85, 0, 0.2); }
+html[data-theme="dark"] .cmd-chip.active { box-shadow: 0 0 16px var(--accent-orange); }
+.cmd-chip:active { transform: translateY(2px); box-shadow: none; }
+
+.card-section { display: flex; flex-direction: column; gap: 12px; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+
+.device-card {
+  position: relative; background: var(--bg-secondary); border: 1px solid rgba(0, 122, 255, 0.15); border-radius: 14px;
+  padding: 18px; cursor: pointer; display: flex; flex-direction: column; min-height: 420px; overflow: hidden;
+  transition: box-shadow 0.4s var(--ease-standard), border-color 0.3s var(--ease-standard), background 0.3s var(--ease-standard);
+  --mx: 50%; --my: 50%; --angle: 0deg;
+  transform-style: preserve-3d; will-change: transform;
+}
+html[data-theme="light"] .device-card { box-shadow: var(--shadow-card); }
+/* 毛玻璃材质：半透明 + 高斯模糊，让背后的矩阵雨隐约透出来，
+   顶部叠一层极细高光模拟玻璃折射边缘（Apple 风格），深浅色主题都启用 */
+html[data-theme="dark"] .device-card {
+  background: rgba(10, 15, 30, 0.5);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 0 0 1px rgba(255,255,255,0.03);
+}
+html[data-theme="light"] .device-card {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 30px rgba(0, 122, 255, 0.10), inset 0 1px 0 rgba(255,255,255,0.7), inset 0 0 0 1px rgba(255,255,255,0.35);
+}
+/* vanilla-tilt.js 接管卡片的倾斜/缩放变换(transform)，这里只负责边框/阴影变化，
+   避免 CSS transition 和 JS 每帧写入的 inline transform 互相打架 */
+.device-card:hover { border-color: var(--accent-orange); }
+html[data-theme="light"] .device-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 122, 255, 0.10), inset 0 1px 0 rgba(255,255,255,0.7),
+    0 0 36px rgba(0, 122, 255, 0.24), 0 0 72px rgba(255, 45, 85, 0.14);
+}
+html[data-theme="dark"] .device-card:hover {
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.1),
+    0 0 40px rgba(0, 246, 255, 0.4), 0 0 90px rgba(139, 92, 246, 0.22);
+}
+.device-card.is-selected { border-color: var(--accent-orange); background: var(--bg-glass-hover); }
+
+/* 悬停时环绕卡片旋转的霓虹光圈 + 光晕染开效果，深色/浅色主题都启用，
+   颜色随主题 CSS 变量自动切换（浅色为 Apple 蓝/粉，深色为赛博青/品红） */
+@property --angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.device-card::after {
+  content: ''; position: absolute; inset: -3px; border-radius: inherit; padding: 2px;
+  background: conic-gradient(from var(--angle), transparent 0%, var(--accent-blue) 12%, transparent 24%, transparent 50%, var(--accent-pink) 62%, transparent 74%, transparent 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; filter: blur(1.5px) drop-shadow(0 0 10px var(--accent-blue)) drop-shadow(0 0 16px var(--accent-pink));
+  transition: opacity 0.35s ease; pointer-events: none; z-index: 6;
+}
+.device-card:hover::after { opacity: 1; animation: card-ring-spin 2.6s linear infinite; }
+@keyframes card-ring-spin { to { --angle: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+  .device-card:hover::after { animation: none; --angle: 0deg; }
+}
+
+/* Apple 风格：跟随鼠标位置的玻璃高光(sheen),配合毛玻璃材质形成"液态玻璃"折光感 */
+.card-sheen {
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 4;
+  background: radial-gradient(480px circle at var(--mx) var(--my), rgba(255,255,255,0.16), rgba(255,255,255,0.04) 32%, transparent 55%);
+  opacity: 0; transition: opacity 0.35s ease; mix-blend-mode: overlay;
+}
+.device-card:hover .card-sheen { opacity: 1; }
+html[data-theme="light"] .card-sheen { mix-blend-mode: soft-light; }
+
+.ghost-container { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.ghost-layer { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+.ghost-layer::before, .ghost-layer::after { content: ''; position: absolute; inset: 0; border-radius: inherit; border: 2px solid var(--accent-blue); opacity: 0; }
+.device-card.is-removing .ghost-layer::before { animation: ghost-1 0.3s var(--ease-smooth) forwards; }
+.device-card.is-removing .ghost-layer::after { animation: ghost-2 0.3s var(--ease-smooth) 0.05s forwards; }
+.device-card.is-adding .ghost-layer::before { animation: ghost-in-1 0.4s var(--ease-smooth) forwards; }
+.device-card.is-adding .ghost-layer::after { animation: ghost-in-2 0.4s var(--ease-smooth) 0.08s forwards; }
+@keyframes ghost-1 { 0% { opacity: 0.6; transform: scale(1); } 100% { opacity: 0; transform: scale(1.06) translateX(-4px); } }
+@keyframes ghost-2 { 0% { opacity: 0.5; transform: scale(1); } 100% { opacity: 0; transform: scale(1.04) translateX(4px); } }
+@keyframes ghost-in-1 { 0% { opacity: 0; transform: scale(0.92) translateX(-8px); } 50% { opacity: 0.4; } 100% { opacity: 0; transform: scale(1); } }
+@keyframes ghost-in-2 { 0% { opacity: 0; transform: scale(0.92) translateX(8px); } 50% { opacity: 0.3; } 100% { opacity: 0; transform: scale(1); } }
+
+.scan-trace { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.scan-trace::before { content: ''; position: absolute; inset: -2px; border: 1px solid transparent; border-radius: inherit; opacity: 0; transition: opacity 0.15s; }
+html[data-theme="dark"] .device-card:hover .scan-trace::before {
+  opacity: 1; animation: trace-scan 2s linear infinite; border-color: var(--accent-blue);
+  box-shadow: 0 0 16px rgba(0, 246, 255, 0.2), inset 0 0 16px rgba(0, 246, 255, 0.08);
+}
+@keyframes trace-scan { 0% { clip-path: inset(0 0 98% 0); } 25% { clip-path: inset(0 0 0 98%); } 50% { clip-path: inset(98% 0 0 0); } 75% { clip-path: inset(0 98% 0 0); } 100% { clip-path: inset(0 0 98% 0); } }
+
+.click-ripple { position: absolute; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, var(--accent-blue) 0%, transparent 70%); transform: translate(-50%, -50%) scale(0); animation: ripple-expand 0.7s var(--ease-smooth) forwards; z-index: 50; }
+.click-ripple.pink { background: radial-gradient(circle, var(--accent-pink) 0%, transparent 70%); animation-delay: 0.1s; }
+@keyframes ripple-expand { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(var(--ripple-scale, 5)); opacity: 0; } }
+
+.btn-press { animation: btn-press-flash 0.35s var(--ease-smooth); }
+@keyframes btn-press-flash { 0% { transform: scale(1); filter: brightness(1); } 35% { transform: scale(0.95); filter: brightness(1.2); } 100% { transform: scale(1); filter: brightness(1); } }
+
+.device-card.is-clicking { animation: card-click-flash 0.5s var(--ease-smooth); }
+@keyframes card-click-flash { 0% { transform: scale(1); } 35% { transform: scale(0.97); } 100% { transform: scale(1); } }
+
+.device-card.is-best-match::before {
+  content: 'BEST \A MATCH'; white-space: pre; position: absolute; top: 50%; right: -8px; transform: translateY(-50%);
+  z-index: 5; padding: 4px 10px; min-width: 64px; min-height: 32px; box-sizing: border-box; text-align: center;
+  line-height: 1.2; font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--accent-green); background: var(--bg-primary); border: 1px solid var(--accent-green); border-radius: 4px;
+  animation: best-pulse 1.5s ease-in-out infinite; pointer-events: none;
+}
+@keyframes best-pulse { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+
+.device-card.is-best-match .card-content, .device-card.is-rank-2 .card-content, .device-card.is-rank-3 .card-content { position: relative; }
+.device-card.is-best-match .card-content { animation: rgb-drift 1.2s ease-in-out infinite; }
+.device-card.is-rank-2 .card-content { animation: rgb-drift 2.4s ease-in-out infinite; }
+.device-card.is-rank-3 .card-content { animation: rgb-drift 4s ease-in-out infinite; }
+html[data-theme="dark"] .device-card.is-best-match .card-content { filter: drop-shadow(-1.5px 0 rgba(255, 0, 60, 0.7)) drop-shadow(1.5px 0 rgba(57, 255, 20, 0.7)); }
+html[data-theme="dark"] .device-card.is-rank-2 .card-content { filter: drop-shadow(-1px 0 rgba(255, 0, 60, 0.5)) drop-shadow(1px 0 rgba(57, 255, 20, 0.5)); }
+html[data-theme="dark"] .device-card.is-rank-3 .card-content { filter: drop-shadow(-0.5px 0 rgba(255, 0, 60, 0.3)) drop-shadow(0.5px 0 rgba(57, 255, 20, 0.3)); }
+@keyframes rgb-drift { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(1px, -0.5px); } 50% { transform: translate(-1px, 0.5px); } 75% { transform: translate(0.5px, 0); } }
+
+.device-card.is-best-match.is-blink::before { color: #ff003c !important; border-color: #ff003c !important; }
+.device-card.is-best-match.is-warp::before { transform: translateY(-50%) rotate(2deg) skew(-2deg) !important; border-color: #ff003c !important; }
+.device-card.is-best-match.is-pixelating .card-content {
+  filter: drop-shadow(-1.5px 0 rgba(255, 0, 60, 0.8)) drop-shadow(1.5px 0 rgba(57, 255, 20, 0.8)) contrast(2) saturate(2);
+  transform: scale(1.003); transition: none;
+}
+
+.device-card.is-best-match.is-glitching::after, .device-card.is-rank-2.is-glitching::after, .device-card.is-rank-3.is-glitching::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 4;
+  background: linear-gradient(180deg, transparent 0%, transparent 18%, rgba(255, 0, 60, 0.15) 18%, rgba(255, 0, 60, 0.15) 22%, transparent 22%, transparent 55%, rgba(57, 255, 20, 0.12) 55%, rgba(57, 255, 20, 0.12) 58%, transparent 58%, transparent 100%);
+  mix-blend-mode: screen; border-radius: inherit; animation: scan-shift 0.18s steps(2) 3;
+}
+@keyframes scan-shift { 0% { transform: translateX(0); } 25% { transform: translateX(-3px); } 50% { transform: translateX(2px); } 75% { transform: translateX(-1px); } 100% { transform: translateX(0); } }
+
+.no-match-warning {
+  position: relative; display: inline-block; padding: 14px 28px; margin: 0 auto; border: 1px solid var(--accent-orange);
+  border-radius: 8px; background: var(--accent-orange-soft); font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 13px;
+  font-weight: 700; letter-spacing: 0.15em; color: var(--accent-orange); cursor: default;
+  animation: nmw-jitter 0.18s steps(4) infinite, nmw-blink 1.6s ease-in-out infinite; grid-column: 1 / -1; justify-self: center;
+}
+.no-match-warning-inner { position: relative; z-index: 1; }
+html[data-theme="dark"] .no-match-warning-inner { text-shadow: -1px 0 rgba(255, 0, 60, 0.7), 1px 0 rgba(57, 255, 20, 0.7); }
+.no-match-warning::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, transparent 30%, rgba(255, 0, 60, 0.18) 30%, rgba(255, 0, 25, 0.18) 33%, transparent 33%, transparent 60%, rgba(57, 255, 20, 0.12) 60%, rgba(57, 255, 20, 0.12) 63%, transparent 63%, transparent 100%);
+  mix-blend-mode: screen; border-radius: inherit; animation: nmw-scan 2.2s ease-in-out infinite;
+}
+@keyframes nmw-jitter { 0% { transform: translate(0, 0); } 25% { transform: translate(0.5px, -0.3px); } 50% { transform: translate(-0.5px, 0.3px); } 75% { transform: translate(0.3px, 0); } 100% { transform: translate(0, 0); } }
+@keyframes nmw-blink { 0%, 90%, 100% { color: var(--accent-orange); border-color: var(--accent-orange); } 93%, 97% { color: #ff003c; border-color: #ff003c; } }
+@keyframes nmw-scan { 0%, 100% { opacity: 0.4; transform: translateX(0); } 50% { opacity: 0.8; transform: translateX(-2px); } }
+
+.card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid rgba(0, 122, 255, 0.1); margin-bottom: 14px; position: relative; flex-shrink: 0; }
+html[data-theme="light"] .card-header::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-orange), transparent);
+  transform: scaleX(0); transform-origin: left; animation: scan-line 3s var(--ease-smooth) infinite; opacity: 0;
+}
+.device-card:hover .card-header::before { opacity: 1; }
+@keyframes scan-line { 0% { transform: scaleX(0); } 50% { transform: scaleX(1); } 100% { transform: scaleX(0); transform-origin: right; } }
+
+.card-brand-model { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.brand-prompt { font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; }
+.model-name { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html[data-theme="dark"] .model-name { text-shadow: 0 0 10px rgba(0, 246, 255, 0.3); }
+
+.card-year-status { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.year-badge { font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 10px; color: var(--text-muted); padding: 4px 10px; border: 1px solid rgba(0, 122, 255, 0.15); border-radius: 10px; background: var(--bg-tertiary); }
+.status-led { width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted); opacity: 0.3; transition: all 0.3s var(--ease-standard); flex-shrink: 0; margin-top: 4px; }
+.device-card.is-selected .status-led { background: var(--accent-green, #39ff14); opacity: 1; }
+html[data-theme="dark"] .device-card.is-selected .status-led { box-shadow: 0 0 10px var(--accent-green, #39ff14); animation: led-pulse 1.5s ease-in-out infinite; }
+@keyframes led-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+.card-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; flex-shrink: 0; }
+.metric-item { display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; padding: 10px 6px; background: var(--bg-tertiary); border-radius: 12px; }
+.metric-label { font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.metric-value { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+.metric-value .unit { color: var(--accent-orange); font-size: 12px; margin-left: 2px; font-family: 'JetBrains Mono', 'SF Mono', monospace; letter-spacing: 0; }
+html[data-theme="dark"] .metric-value { color: var(--accent-blue); }
+
+.card-specs { font-size: 13px; line-height: 1.7; margin-bottom: 14px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+.spec-row { display: flex; gap: 6px; }
+.spec-key { color: var(--text-muted); font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 10px; flex-shrink: 0; }
+.spec-value { color: var(--text-primary); font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.card-scores { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; flex-shrink: 0; }
+.score-bar-wrap { display: flex; align-items: center; gap: 10px; }
+.score-label { font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 10px; color: var(--text-muted); width: 40px; flex-shrink: 0; }
+.score-track { flex: 1; height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden; position: relative; }
+.score-fill { height: 100%; border-radius: 3px; width: var(--score, 0%); transition: width 0.5s var(--ease-spring), background 0.3s var(--ease-standard); position: relative; }
+html[data-theme="light"] .score-fill { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple, #af52de)); }
+html[data-theme="dark"] .score-fill { background: linear-gradient(90deg, var(--accent-pink, #ff2bd6), var(--accent-purple, #8b5cf6), var(--accent-blue)); box-shadow: 0 0 12px rgba(0, 246, 255, 0.4); }
+.score-num { font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 11px; font-weight: 700; width: 28px; text-align: right; flex-shrink: 0; color: var(--text-secondary); }
+.score-num.high { color: var(--accent-green, #30d158); }
+.score-num.med { color: var(--accent-orange); }
+.score-num.low { color: var(--accent-orange); }
+
+.card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; flex-shrink: 0; }
+.tag { font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 10px; padding: 5px 10px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+.tag.cat-pc { background: var(--accent-blue-soft); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+.tag.cat-console { background: var(--accent-orange-soft); color: var(--accent-orange); border: 1px solid var(--accent-orange); }
+.tag.cat-retro { background: rgba(175, 82, 222, 0.12); color: var(--accent-purple, #af52de); border: 1px solid var(--accent-purple, #af52de); }
+.tag.feat { background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid rgba(0, 122, 255, 0.1); }
+.tag.hash { background: transparent; color: var(--text-muted); border: 1px dashed rgba(0, 122, 255, 0.2); }
+
+.btn-add { margin-top: auto; width: 100%; padding: 13px 16px; border: 1px solid rgba(0, 122, 255, 0.2); border-radius: 12px; background: var(--bg-tertiary); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.03em; cursor: pointer; transition: all 0.2s var(--ease-standard); position: relative; overflow: hidden; flex-shrink: 0; }
+.btn-add:hover { background: var(--accent-blue); color: #ffffff; border-color: var(--accent-blue); transform: translateY(-1px); }
+html[data-theme="light"] .btn-add:hover { box-shadow: 4px 4px 0px rgba(0, 122, 255, 0.2); }
+html[data-theme="dark"] .btn-add:hover { box-shadow: 0 0 20px rgba(0, 246, 255, 0.4); }
+.btn-add:active { transform: translateY(0); box-shadow: none; }
+.device-card.is-selected .btn-add { background: var(--accent-orange); color: #ffffff; border-color: var(--accent-orange); }
+html[data-theme="light"] .device-card.is-selected .btn-add { box-shadow: 4px 4px 0px rgba(255, 85, 0, 0.2); }
+html[data-theme="dark"] .device-card.is-selected .btn-add { box-shadow: 0 0 20px rgba(255, 85, 0, 0.4); }
+
+html[data-theme="light"] .device-card::after {
+  content: ''; position: absolute; inset: -50%; background: linear-gradient(120deg, transparent 30%, rgba(0, 180, 216, 0.04) 50%, transparent 70%);
+  transform: rotate(15deg); animation: holographic-sheen 10s linear infinite; pointer-events: none; opacity: 0; transition: opacity 0.3s;
+}
+html[data-theme="light"] .device-card:hover::after { opacity: 1; }
+@keyframes holographic-sheen { 0% { transform: translateX(-30%) rotate(15deg); } 100% { transform: translateX(30%) rotate(15deg); } }
+
+#matrix-console { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: var(--bg-glass); backdrop-filter: var(--blur-amount); -webkit-backdrop-filter: var(--blur-amount); border-top: 1px solid var(--border-soft); box-shadow: 0 -8px 30px rgba(0,0,0,0.1); transform: translateY(100%); transition: transform 0.35s var(--ease-spring); }
+html[data-theme="dark"] #matrix-console { border-top: 1px solid rgba(0,246,255,0.3); box-shadow: 0 -8px 40px rgba(0,246,255,0.15); }
+#matrix-console.open { transform: translateY(0); }
+.console-inner { max-width: 1400px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.console-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.console-label { font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 11px; color: var(--text-accent); white-space: nowrap; }
+.matrix-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.console-right { display: flex; gap: 8px; flex-wrap: wrap; }
+.compare-btn { padding: 10px 20px; border: 1px solid var(--accent-blue); border-radius: 20px; background: transparent; color: var(--accent-blue); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+.compare-btn:hover { background: var(--accent-blue); color: var(--bg-primary); }
+html[data-theme="light"] .compare-btn:hover { box-shadow: 4px 4px 0px rgba(0,122,255,0.2); }
+html[data-theme="dark"] .compare-btn:hover { box-shadow: 0 0 16px var(--accent-blue); }
+.compare-btn.primary { background: var(--accent-orange); border-color: var(--accent-orange); color: var(--bg-primary); }
+
+.compare-modal { position: fixed; inset: 0; z-index: 100; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.25s var(--ease-standard); }
+.compare-modal:not(.hidden) { opacity: 1; pointer-events: auto; }
+.compare-inner { background: var(--bg-glass); backdrop-filter: var(--blur-amount); -webkit-backdrop-filter: var(--blur-amount); border: 1px solid rgba(0, 122, 255, 0.15); border-radius: 24px; max-width: 1400px; width: 100%; max-height: 92vh; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+.compare-header { padding: 20px 24px; border-bottom: 1px solid rgba(0,122,255,0.1); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; flex-shrink: 0; }
+.compare-title { margin: 0; font-family: 'Orbitron', sans-serif; font-size: 20px; letter-spacing: 0.12em; color: var(--text-accent); }
+.compare-subtitle { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-muted); margin: 4px 0 0 0; }
+.compare-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.compare-content { padding: 24px; display: grid; grid-template-columns: 1fr 2fr; gap: 24px; overflow: hidden; flex: 1; min-height: 0; }
+.radar-panel { background: var(--bg-secondary); border: 1px solid rgba(0, 122, 255, 0.15); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; min-height: 0; }
+.radar-wrapper { position: relative; flex: 1; min-height: 320px; }
+.table-panel { background: var(--bg-secondary); border: 1px solid rgba(0, 122, 255, 0.15); border-radius: 16px; padding: 16px; overflow: auto; min-height: 0; }
+.compare-table { width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 11px; border-collapse: collapse; }
+.compare-table th { text-align: left; padding: 10px 12px; color: var(--text-muted); font-weight: 500; border-bottom: 1px solid rgba(0,122,255,0.1); }
+.compare-table td { text-align: left; padding: 10px 12px; color: var(--text-secondary); border-bottom: 1px solid rgba(0,122,255,0.08); }
+.compare-table .device-col { color: var(--accent-orange); font-weight: 700; }
+.compare-table .is-best { color: var(--accent-orange); font-weight: 700; }
+html[data-theme="dark"] .compare-table .is-best { text-shadow: 0 0 8px var(--accent-orange); }
+.compare-table tr.row-hidden { display: none !important; }
+
+#matrix-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.16; transition: opacity 0.4s var(--ease-standard); mix-blend-mode: normal; }
+/* 浅色模式下矩阵雨保留：透明度调低、字符改用主题蓝/粉色，做成若隐若现的水印感，
+   而不是像深色模式那样是主视觉，呼应"苹果风的克制 + 赛博朋克底色"要求 */
+html[data-theme="light"] #matrix-canvas { opacity: 0.10; mix-blend-mode: multiply; }
+
+#hud-toast { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 9999; padding: 10px 20px; border: 1px solid currentColor; border-radius: 8px; background: var(--bg-glass); backdrop-filter: var(--blur-amount); -webkit-backdrop-filter: var(--blur-amount); font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.08em; opacity: 0; pointer-events: none; transition: opacity 0.2s var(--ease-standard), transform 0.2s var(--ease-standard); }
+#hud-toast.visible { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+html[data-theme="dark"] #hud-toast { box-shadow: 0 0 16px currentColor; }
+
+.effects-paused .effects-canvas, .effects-paused #matrix-canvas { display: none; }
+.effects-paused .device-card::after, .effects-paused .card-header::before, .effects-paused .scan-trace::before { animation-play-state: paused !important; display: none !important; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-tertiary); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--accent-blue), var(--accent-purple, var(--accent-orange))); border-radius: 4px; }
+html[data-theme="dark"] ::-webkit-scrollbar-thumb { box-shadow: 0 0 8px rgba(0, 246, 255, 0.3); }
+
+@media (max-width: 900px) { .compare-content { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .header-inner { flex-direction: column; align-items: flex-start; } .header-right { width: 100%; justify-content: space-between; } .card-grid { grid-template-columns: 1fr; } .console-inner { flex-direction: column; align-items: flex-start; } }
+  </style>
+</head>
+<body>
+  <div id="init-loader" class="init-loading">
+    <div class="boot-line">[ INITIALIZING MATRIX<span class="cursor"></span> ]</div>
+    <div class="boot-bar"><div class="boot-bar-fill"></div></div>
+  </div>
+  <canvas id="matrix-canvas"></canvas>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-title">
+        <h1 class="main-title">HANDHELD MATRIX <span class="version">v4.3</span></h1>
+        <p class="subtitle">[ NEURAL LINK ESTABLISHED ]</p>
+      </div>
+      <div class="header-right">
+        <div id="hud-clock" class="hud-clock"></div>
+        <div id="sys-status" class="sys-status">// SYS: NEON_ABYSS</div>
+        <button id="theme-toggle" class="theme-toggle" aria-label="切换主题">
+          <svg class="theme-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="hud-panel" id="hud-panel">
+      <div class="hud-label">HUD MSGMATRIX FOUND: <span id="result-count" class="hud-value">0</span> DEVICES</div>
+      <div class="hud-label" style="margin-top: 8px;">Loading full interface...</div>
+    </div>
+
+    <section class="card-section">
+      <div class="hud-label">[ DEVICE NODES ]</div>
+      <div id="card-grid" class="card-grid"></div>
+    </section>
+  </main>
+
+  <div id="matrix-console">
+    <div class="console-inner">
+      <div class="console-left">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        <span class="console-label">[ MATRIX ] <span id="matrix-count" class="hud-value">0</span> / 4</span>
+        <div id="matrix-chips" class="matrix-chips"></div>
+      </div>
+      <div class="console-right">
+        <button id="btn-open-compare" class="compare-btn">▶ OPEN COMPARE</button>
+        <button id="btn-export-poster" class="compare-btn">📸 EXPORT</button>
+        <button id="btn-clear-matrix" class="compare-btn">✕ CLEAR</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="hud-toast"></div>
+
+  <script>
+(function() {
+  'use strict';
+
+  // 内嵌设备数据库：本工具为单文件本地应用（file:// 双击打开），
+  // 不依赖 fetch() 读取外部 devices.json（该请求在 file:// 协议下
+  // 可能被浏览器安全策略静默挂起、导致初始化界面永久卡住），
+  // 因此把权威数据直接内嵌到脚本中，加载 0 延迟、离线可靠。
+  const EMBEDDED_DEVICES = [{"id":"steam-deck-oled","name":"Steam Deck OLED","brand":"Valve","aliases":["SD","Deck","V社","OLED Deck"],"price_cny":4200,"weight_g":640,"battery_wh":50,"estimated_battery_h":6,"year":2023,"category":"pc","screen":{"size_inch":7.4,"type":"OLED","refresh_hz":90,"resolution":"1280x800","srgb_percent":110},"hardware":{"cpu":"AMD Sephiroth (Zen2 6nm)","gpu":"RDNA2 12CU","ram_gb":16,"storage_gb":512,"tdp_w":15,"architecture":"x86_64","tdp_min_w":4,"tdp_max_w":15},"scores":{"performance":78,"battery":75,"screen":88,"portability":55,"value":80,"cooling":70}},{"id":"rog-ally-x","name":"ROG Ally X","brand":"ASUS","aliases":["AllyX","Ally X","华硕"],"price_cny":5800,"weight_g":678,"battery_wh":80,"estimated_battery_h":5,"year":2024,"category":"pc","screen":{"size_inch":7,"type":"IPS","refresh_hz":120,"resolution":"1920x1080","srgb_percent":100},"hardware":{"cpu":"AMD Ryzen Z1 Extreme","gpu":"RDNA3 12CU","ram_gb":24,"storage_gb":1024,"tdp_w":30,"architecture":"x86_64","tdp_min_w":9,"tdp_max_w":30},"scores":{"performance":90,"battery":82,"screen":80,"portability":50,"value":70,"cooling":78}},{"id":"legion-go-2","name":"Legion Go 2","brand":"Lenovo","aliases":["Legion","拯救者"],"price_cny":5800,"weight_g":875,"battery_wh":74,"estimated_battery_h":4.5,"year":2026,"category":"pc","screen":{"size_inch":8.8,"type":"OLED","refresh_hz":144,"resolution":"2560x1600","srgb_percent":110},"hardware":{"cpu":"AMD Ryzen AI 9 HX 370","gpu":"RDNA3.5 16CU","ram_gb":32,"storage_gb":1024,"tdp_w":33,"architecture":"x86_64","tdp_min_w":10,"tdp_max_w":35},"scores":{"performance":95,"battery":75,"screen":95,"portability":30,"value":65,"cooling":82}},{"id":"ayaneo-2s","name":"AYANEO 2S","brand":"AYANEO","aliases":["AYA","亚诺"],"price_cny":5500,"weight_g":670,"battery_wh":50.7,"estimated_battery_h":4,"year":2024,"category":"pc","screen":{"size_inch":7,"type":"IPS","refresh_hz":120,"resolution":"1920x1080","srgb_percent":100},"hardware":{"cpu":"AMD Ryzen 7 7840U","gpu":"RDNA3 12CU","ram_gb":16,"storage_gb":512,"tdp_w":28,"architecture":"x86_64","tdp_min_w":8,"tdp_max_w":28},"scores":{"performance":88,"battery":65,"screen":80,"portability":50,"value":60,"cooling":70}},{"id":"gpd-win-4","name":"GPD WIN 4 (2025)","brand":"GPD","aliases":["WIN4","GPD"],"price_cny":5300,"weight_g":598,"battery_wh":45.6,"estimated_battery_h":3.5,"year":2025,"category":"pc","screen":{"size_inch":6,"type":"IPS","refresh_hz":60,"resolution":"1920x1080","srgb_percent":100},"hardware":{"cpu":"AMD Ryzen 7 8840U","gpu":"RDNA3 12CU","ram_gb":16,"storage_gb":1024,"tdp_w":28,"architecture":"x86_64","tdp_min_w":8,"tdp_max_w":28},"scores":{"performance":85,"battery":60,"screen":70,"portability":70,"value":60,"cooling":65}},{"id":"switch-oled","name":"Switch OLED","brand":"Nintendo","aliases":["NS","NSO","Switch"],"price_cny":2200,"weight_g":420,"battery_wh":17.5,"estimated_battery_h":5,"year":2021,"category":"console","screen":{"size_inch":7,"type":"OLED","refresh_hz":60,"resolution":"1280x720","srgb_percent":100},"hardware":{"cpu":"NVIDIA Tegra X1+","gpu":"Maxwell 256CU","ram_gb":4,"storage_gb":64,"tdp_w":7,"architecture":"ARMv8","tdp_min_w":3,"tdp_max_w":10},"scores":{"performance":45,"battery":70,"screen":78,"portability":90,"value":75,"cooling":95}},{"id":"miyoo-mini-plus","name":"Miyoo Mini Plus","brand":"Miyoo","aliases":["Miyoo+","Mini+","复古"],"price_cny":400,"weight_g":136,"battery_wh":8,"estimated_battery_h":7,"year":2024,"category":"retro","screen":{"size_inch":3.5,"type":"IPS","refresh_hz":60,"resolution":"640x480","srgb_percent":90},"hardware":{"cpu":"Allwinner A133","gpu":"PowerVR GE8300","ram_gb":1,"storage_gb":64,"tdp_w":3,"architecture":"ARMv7","tdp_min_w":0.5,"tdp_max_w":3},"scores":{"performance":25,"battery":90,"screen":50,"portability":95,"value":95,"cooling":100}},{"id":"retroid-pocket-4-pro","name":"Retroid Pocket 4 Pro","brand":"Retroid","aliases":["RP4P","Retroid"],"price_cny":1300,"weight_g":380,"battery_wh":16,"estimated_battery_h":6,"year":2024,"category":"retro","screen":{"size_inch":4.7,"type":"IPS","refresh_hz":60,"resolution":"1280x960","srgb_percent":95},"hardware":{"cpu":"Dimensity 1100","gpu":"Mali-G77","ram_gb":8,"storage_gb":128,"tdp_w":8,"architecture":"ARMv8","tdp_min_w":2,"tdp_max_w":10},"scores":{"performance":60,"battery":78,"screen":70,"portability":88,"value":92,"cooling":80}}];
+
+  const State = {
+    filters: { query:'', price:[0,10000], weight:[0,1500], cmd:null },
+    selected: new Set(), diffMode: false, radarChart: null, currentTheme: 'dark',
+    animationPaused: false, isScrolling: false, devices: []
+  };
+
+  let MIN_PRICE = 0, MAX_PRICE = 10000, MIN_WEIGHT = 0, MAX_WEIGHT = 1500;
+
+  function getDevices() { return State.devices; }
+  function getDeviceById(id) { return State.devices.find(d => d.id === id); }
+
+  function debounce(fn, delay) { let t=null; return function(...args){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,args),delay); }; }
+  function showToast(msg, color='cyan') {
+    const toast = document.getElementById('hud-toast');
+    if (!toast) return;
+    const colors = { cyan:'var(--accent-blue)', pink:'var(--accent-pink)', purple:'var(--accent-purple)', green:'var(--accent-green)', orange:'var(--accent-orange)' };
+    toast.textContent = msg;
+    toast.style.color = colors[color] || colors.cyan;
+    toast.style.borderColor = toast.style.color;
+    toast.classList.add('visible');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=>{ toast.classList.remove('visible'); }, 2500);
+  }
+
+  function isLightMode() { return document.documentElement.getAttribute('data-theme')==='light'; }
+
+  function cardHTML(device) {
+    const selected = State.selected.has(device.id);
+    const scoreClass = (s)=>s>=80?'high':s>=60?'med':'low';
+    return '<div class="device-card '+ (selected?'is-selected':'') +'" data-id="'+ device.id +'">' +
+      '<div class="card-sheen"></div>' +
+      '<div class="ghost-container"><div class="ghost-layer"></div></div>' +
+      '<div class="scan-trace"></div>' +
+      '<div class="card-content">' +
+        '<div class="card-header">' +
+          '<div class="card-brand-model">' +
+            '<div class="brand-prompt">&gt; '+ device.brand +'</div>' +
+            '<div class="model-name">'+ device.name +'</div>' +
+          '</div>' +
+          '<div class="card-year-status">' +
+            '<div class="year-badge">'+ String(device.year).slice(2) +'</div>' +
+            '<span class="status-led"></span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card-metrics">' +
+          '<div class="metric-item">' +
+            '<div class="metric-label">价格</div>' +
+            '<div class="metric-value">'+ device.price_cny.toLocaleString() +'<span class="unit">¥</span></div>' +
+          '</div>' +
+          '<div class="metric-item">' +
+            '<div class="metric-label">续航</div>' +
+            '<div class="metric-value">'+ device.battery_wh +'<span class="unit">Wh</span></div>' +
+          '</div>' +
+          '<div class="metric-item">' +
+            '<div class="metric-label">重量</div>' +
+            '<div class="metric-value">'+ device.weight_g +'<span class="unit">g</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card-specs">' +
+          '<div class="spec-row"><span class="spec-key">CPU</span><span class="spec-value">'+ device.hardware.cpu +'</span></div>' +
+          '<div class="spec-row"><span class="spec-key">GPU</span><span class="spec-value">'+ device.hardware.gpu +'</span></div>' +
+          '<div class="spec-row"><span class="spec-key">RAM</span><span class="spec-value">'+ device.hardware.ram_gb +'GB · '+ device.screen.size_inch +'" '+ device.screen.type +' '+ device.screen.refresh_hz +'Hz</span></div>' +
+        '</div>' +
+        '<div class="card-scores">' +
+          ['PERF',device.scores.performance,'BATT',device.scores.battery,'SCR',device.scores.screen].reduce((html,lab,i,arr)=>{
+            if(i%2!==0) return html;
+            const score=arr[i+1], sc=scoreClass(score);
+            return html+'<div class="score-bar-wrap"><span class="score-label">'+lab+'</span><div class="score-track"><div class="score-fill" style="--score:'+score+'%"></div></div><span class="score-num '+sc+'">'+score+'</span></div>';
+          },'') +
+        '</div>' +
+        '<div class="card-tags">' +
+          '<span class="tag cat-'+ device.category +'">'+ device.category.toUpperCase() +'</span>' +
+          (device.screen.type==='OLED'?'<span class="tag feat">OLED</span>':'') +
+          (device.screen.refresh_hz>=120?'<span class="tag feat">HI-RFR</span>':'') +
+          '<span class="tag hash">#</span>' +
+        '</div>' +
+        '<button class="btn-add" data-id="'+ device.id +'">' + (selected?'✓ IN MATRIX':'+ ADD TO MATRIX') + '</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function noMatchHTML() {
+    return '<div class="no-match-warning"><span class="no-match-warning-inner">[ NO DEVICE MATCHED QUERY ]</span></div>';
+  }
+
+  function renderCards(filteredDevices) {
+    const grid = document.getElementById('card-grid');
+    const countEl = document.getElementById('result-count');
+    if (!grid) return;
+    if (!filteredDevices || filteredDevices.length===0) {
+      grid.innerHTML = noMatchHTML();
+      if(countEl) countEl.textContent = '0';
+    } else {
+      grid.innerHTML = filteredDevices.map(d=>cardHTML(d)).join('');
+      if(countEl) countEl.textContent = filteredDevices.length;
+    }
+    if (typeof lucide!=='undefined' && lucide.createIcons) lucide.createIcons();
+    reinitCardTilt();
+  }
+
+  // Apple 风格鼠标 3D 倾斜 + 高光扫光：用开源库 vanilla-tilt.js 接管卡片的
+  // transform，比手写 mousemove 计算更稳（内置了 60fps 节流、退出回弹动画）。
+  // renderCards() 每次用 innerHTML 整体重建卡片节点，所以每次渲染后都要重新绑定；
+  // 脚本是 defer 加载的，首次 init() 时它可能还没就绪，所以下面同时在
+  // DOMContentLoaded 时机做一次兜底重绑定。
+  function reinitCardTilt() {
+    if (typeof VanillaTilt === 'undefined') return;
+    const cards = document.querySelectorAll('.device-card[data-id]');
+    if (!cards.length) return;
+    cards.forEach(el => { if (el.vanillaTilt) el.vanillaTilt.destroy(); });
+    VanillaTilt.init(cards, {
+      max: 6, speed: 400, perspective: 900, scale: 1.02,
+      glare: true, 'max-glare': 0.18,
+      easing: 'cubic-bezier(.03,.98,.52,.99)'
+    });
+  }
+  document.addEventListener('DOMContentLoaded', reinitCardTilt);
+
+  function updateCardSelection(id) {
+    const card = document.querySelector('.device-card[data-id="'+id+'"]');
+    if (!card) return;
+    const isSelected = State.selected.has(id);
+    const btn = card.querySelector('.btn-add');
+    if (isSelected) {
+      card.classList.add('is-selected');
+      if (btn) btn.textContent = '✓ IN MATRIX';
+    } else {
+      card.classList.remove('is-selected');
+      if (btn) btn.textContent = '+ ADD TO MATRIX';
+    }
+  }
+
+  function renderMatrixConsole() {
+    const consoleEl = document.getElementById('matrix-console');
+    const chipsEl = document.getElementById('matrix-chips');
+    const countEl = document.getElementById('matrix-count');
+    if (!consoleEl || !chipsEl) return;
+
+    countEl.textContent = State.selected.size;
+    chipsEl.innerHTML = Array.from(State.selected).map(id=>{
+      const d = getDeviceById(id);
+      return d ? '<span class="tag cat-'+ (d.category || 'pc') +'" data-rm="'+id+'" style="cursor:pointer;">'+ d.name +' ✕</span>' : '';
+    }).join('');
+
+    if (State.selected.size > 0) {
+      consoleEl.style.transform = 'translateY(0)';
+      consoleEl.classList.add('open');
+    } else {
+      consoleEl.style.transform = 'translateY(100%)';
+      consoleEl.classList.remove('open');
+    }
+
+    chipsEl.querySelectorAll('[data-rm]').forEach(c=>{
+      c.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const id = c.getAttribute('data-rm');
+        if(id){
+          State.selected.delete(id);
+          updateCardSelection(id);
+          renderMatrixConsole();
+        }
+      });
+    });
+  }
+
+  function renderClock() {
+    const clockEl = document.getElementById('hud-clock');
+    if (!clockEl) return;
+    const now = new Date();
+    clockEl.innerHTML = '<span>[ '+ now.toLocaleTimeString('zh-CN',{hour12:false}) +' ]</span>';
+  }
+
+  function renderSysStatus(theme) {
+    const statusEl = document.getElementById('sys-status');
+    if (statusEl) statusEl.textContent = '// SYS: '+ (theme==='dark'?'NEON_ABYSS':'HOLO_DAYLIGHT');
+  }
+
+  function applyFilters() {
+    let filtered = getDevices();
+    const q = State.filters.query.trim().toLowerCase();
+    if (q) {
+      filtered = filtered.filter(d=>
+        d.name.toLowerCase().includes(q) ||
+        d.brand.toLowerCase().includes(q) ||
+        (d.aliases && d.aliases.some(a=>a.toLowerCase().includes(q))) ||
+        (d.hardware.cpu && d.hardware.cpu.toLowerCase().includes(q))
+      );
+    }
+    const [pMin,pMax] = State.filters.price;
+    const [wMin,wMax] = State.filters.weight;
+    filtered = filtered.filter(d=>d.price_cny>=pMin && d.price_cny<=pMax && d.weight_g>=wMin && d.weight_g<=wMax);
+    switch (State.filters.cmd) {
+      case 'perf': filtered=filtered.filter(d=>d.scores.performance>85); break;
+      case 'battery': filtered=filtered.filter(d=>d.scores.battery>80); break;
+      case 'oled': filtered=filtered.filter(d=>d.screen.type==='OLED'); break;
+      case 'h120': filtered=filtered.filter(d=>d.screen.refresh_hz>=120); break;
+      case 'light': filtered=filtered.filter(d=>d.weight_g<500); break;
+      case 'cheap': filtered=filtered.filter(d=>d.price_cny<1500); break;
+    }
+    return filtered;
+  }
+
+  function bindCardEvents() {
+    const grid = document.getElementById('card-grid');
+    if (!grid || grid._hasBoundEvents) return;
+    grid._hasBoundEvents = true;
+    grid.addEventListener('click',(e)=>{
+      const btn = e.target.closest('.btn-add');
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      if (!id) return;
+      if (State.selected.has(id)) {
+        State.selected.delete(id);
+      } else {
+        if (State.selected.size>=4) { showToast('[ LIMIT: MAX 4 ]', 'pink'); return; }
+        State.selected.add(id);
+      }
+      updateCardSelection(id);
+      renderMatrixConsole();
+    });
+
+    // Apple 风格玻璃高光跟随鼠标 + 轻微 3D 视差倾斜（尊重"减少动态效果"系统设置）
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let hoverRaf = null;
+    grid.addEventListener('mousemove', (e) => {
+      const card = e.target.closest('.device-card');
+      if (!card) return;
+      if (hoverRaf) cancelAnimationFrame(hoverRaf);
+      hoverRaf = requestAnimationFrame(() => {
+        const rect = card.getBoundingClientRect();
+        const px = (e.clientX - rect.left) / rect.width;
+        const py = (e.clientY - rect.top) / rect.height;
+        card.style.setProperty('--mx', (px*100).toFixed(1)+'%');
+        card.style.setProperty('--my', (py*100).toFixed(1)+'%');
+        if (!reduceMotion) {
+          const tiltX = (py - 0.5) * -6, tiltY = (px - 0.5) * 6;
+          card.style.transform = 'translateY(-6px) scale(1.015) perspective(800px) rotateX('+tiltX.toFixed(2)+'deg) rotateY('+tiltY.toFixed(2)+'deg)';
+        }
+      });
+    }, { passive: true });
+    grid.addEventListener('mouseout', (e) => {
+      const card = e.target.closest('.device-card');
+      if (!card) return;
+      const to = e.relatedTarget;
+      if (to && card.contains(to)) return; // 仍在同一张卡片内部移动，不重置
+      card.style.transform = '';
+      card.style.setProperty('--mx', '50%');
+      card.style.setProperty('--my', '50%');
+    });
+  }
+
+  function refreshAll() {
+    const filtered = applyFilters();
+    renderCards(filtered);
+  }
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme')||'dark';
+    const next = current==='dark'?'light':'dark';
+    html.setAttribute('data-theme', next);
+    State.currentTheme = next;
+    renderSysStatus(next);
+    try { localStorage.setItem('handheld-theme',next); } catch(e){}
+    refreshAll();
+    // 矩阵雨在浅色/深色模式下都常驻播放，只是配色不同，这里只需要让它重新取色
+    if (window.HandheldMatrix && window.HandheldMatrix.matrixRain) { window.HandheldMatrix.matrixRain.themeChanged(); }
+    reinitCardTilt();
+  }
+
+  function setupScrollPause() {
+    let scrollTimeout = null;
+    window.addEventListener('scroll', () => {
+      if (!State.isScrolling) {
+        State.isScrolling = true; document.body.classList.add('effects-paused');
+        if (window.HandheldMatrix && window.HandheldMatrix.matrixRain) { window.HandheldMatrix.matrixRain.stop(); }
+      }
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        State.isScrolling = false; document.body.classList.remove('effects-paused');
+        if (window.HandheldMatrix && window.HandheldMatrix.matrixRain) { window.HandheldMatrix.matrixRain.start(); }
+      }, 150);
+    }, { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        State.animationPaused = true; document.body.classList.add('effects-paused');
+        if (window.HandheldMatrix && window.HandheldMatrix.matrixRain) { window.HandheldMatrix.matrixRain.stop(); }
+      } else {
+        State.animationPaused = false; document.body.classList.remove('effects-paused');
+        if (window.HandheldMatrix && window.HandheldMatrix.matrixRain) { window.HandheldMatrix.matrixRain.start(); }
+      }
+    });
+  }
+
+  function loadFullInterface() {
+    const hudPanel = document.getElementById('hud-panel');
+    if (!hudPanel) return;
+    hudPanel.innerHTML = '<div class="hud-label">HUD MSGMATRIX FOUND: <span id="result-count" class="hud-value">'+ State.devices.length +'</span> DEVICES</div>' +
+      '<div class="filter-grid">' +
+        '<div>' +
+          '<div class="hud-label">QUERY ▸</div>' +
+          '<div class="search-wrap">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+              '<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>' +
+            '</svg>' +
+            '<input id="search-input" type="text" placeholder="name / brand / alias / cpu">' +
+          '</div>' +
+        '</div>' +
+        '<div>' +
+          '<div class="slider-label-row">' +
+            '<label class="hud-label">PRICE (CNY)</label>' +
+            '<span id="price-label" class="editable-label">'+ MIN_PRICE +'-∞</span>' +
+          '</div>' +
+          '<div id="slider-price" class="slider-container"></div>' +
+        '</div>' +
+        '<div>' +
+          '<div class="slider-label-row">' +
+            '<label class="hud-label">WEIGHT (g)</label>' +
+            '<span id="weight-label" class="editable-label">'+ MIN_WEIGHT +'-∞</span>' +
+          '</div>' +
+          '<div id="slider-weight" class="slider-container"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="command-chips">' +
+        '<span class="hud-label">QUICK CMDS ▸</span>' +
+        '<span class="cmd-chip" data-cmd="perf" role="button" tabindex="0">[指令: 性能狂] >85</span>' +
+        '<span class="cmd-chip" data-cmd="battery" role="button" tabindex="0">[指令: 续航王] >80</span>' +
+        '<span class="cmd-chip" data-cmd="oled" role="button" tabindex="0">OLED ONLY</span>' +
+        '<span class="cmd-chip" data-cmd="h120" role="button" tabindex="0">120Hz+</span>' +
+        '<span class="cmd-chip" data-cmd="light" role="button" tabindex="0"><500g</span>' +
+        '<span class="cmd-chip" data-cmd="cheap" role="button" tabindex="0"><¥1500</span>' +
+        '<span class="cmd-chip" data-cmd="reset" role="button" tabindex="0">[ RESET ]</span>' +
+      '</div>';
+
+    document.querySelectorAll('.cmd-chip[data-cmd]').forEach(chip=>{
+      chip.addEventListener('click',()=>{
+        const cmd = chip.getAttribute('data-cmd');
+        document.querySelectorAll('.cmd-chip[data-cmd]').forEach(c=>{ c.style.background='var(--bg-tertiary)'; c.classList.remove('active'); });
+        if (State.filters.cmd===cmd && cmd!=='reset') { State.filters.cmd=null; }
+        else { State.filters.cmd=cmd; if(cmd!=='reset') { chip.style.background='var(--accent-orange-soft)'; chip.style.color='var(--accent-orange)'; chip.classList.add('active'); } }
+        if (cmd==='reset') { State.filters={query:'',price:[MIN_PRICE,MAX_PRICE],weight:[MIN_WEIGHT,MAX_WEIGHT],cmd:null}; const si=document.getElementById('search-input'); if(si)si.value=''; }
+        refreshAll();
+      });
+    });
+
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', debounce((e)=>{ State.filters.query = e.target.value.trim(); refreshAll(); }, 150));
+    }
+
+    document.getElementById('btn-clear-matrix')?.addEventListener('click',()=>{
+      const previousSelected = Array.from(State.selected);
+      State.selected.clear();
+      previousSelected.forEach(id => updateCardSelection(id));
+      renderMatrixConsole();
+    });
+
+    document.getElementById('btn-open-compare')?.addEventListener('click',()=>{ openCompareModal(); });
+
+    if (typeof noUiSlider !== 'undefined') initSliders();
+    initMatrixRain();
+    renderMatrixConsole();
+  }
+
+  function initSliders() {
+    const priceEl = document.getElementById('slider-price');
+    const priceLabel = document.getElementById('price-label');
+    if (priceEl) {
+      try {
+        noUiSlider.create(priceEl, { start:[MIN_PRICE,MAX_PRICE], connect:true, range:{min:MIN_PRICE,max:MAX_PRICE}, step:50, margin:100 });
+        priceEl.noUiSlider.on('update',(v)=>{
+          const [min,max]=v.map(Number);
+          State.filters.price=[min,max];
+          priceLabel.textContent = (min>=MAX_PRICE?'∞':Math.round(min)) +'-'+ (max>=MAX_PRICE?'∞':Math.round(max));
+        });
+        priceEl.noUiSlider.on('set',()=>refreshAll());
+      } catch(e){}
+    }
+    const weightEl = document.getElementById('slider-weight');
+    const weightLabel = document.getElementById('weight-label');
+    if (weightEl) {
+      try {
+        noUiSlider.create(weightEl, { start:[MIN_WEIGHT,MAX_WEIGHT], connect:true, range:{min:MIN_WEIGHT,max:MAX_WEIGHT}, step:10, margin:50 });
+        weightEl.noUiSlider.on('update',(v)=>{
+          const [min,max]=v.map(Number);
+          State.filters.weight=[min,max];
+          weightLabel.textContent = (min>=MAX_WEIGHT?'∞':Math.round(min)) +'-'+ (max>=MAX_WEIGHT?'∞':Math.round(max));
+        });
+        weightEl.noUiSlider.on('set',()=>refreshAll());
+      } catch(e){}
+    }
+  }
+
+  function initMatrixRain() {
+    const canvas = document.getElementById('matrix-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let w=0, h=0, cols=0, drops=[];
+    const fontSize=16;
+    const chars='0123456789ABCDEF';
+    let animFrame=null, running=false;
+    // 24fps 足够呈现"数字雨"的观感，比满帧 60fps 省下接近一半的绘制开销，
+    // 进入页面时不会因为特效抢占主线程而让卡片渲染变卡。
+    const targetFps = 24, frameInterval = 1000/targetFps;
+    let lastDraw = 0;
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // 注意：canvas 2D 的 fillStyle 不会解析 CSS `var(--x)` 字符串（它不挂在任何
+    // 元素的计算样式上，无法做变量替换），必须显式按主题给出实际颜色值。
+    // 浅色模式用 Apple 蓝/更低的字符不透明度，配合 mix-blend:multiply 做成水印感；
+    // 深色模式保持原本的赛博朋克青色雨幕 + 拖尾发光。
+    let colors = { trail: 'rgba(5,6,13,0.08)', glyph: 'rgba(0,246,255,0.9)' };
+    function refreshColors(){
+      colors = isLightMode()
+        ? { trail: 'rgba(245,246,247,0.14)', glyph: 'rgba(0,122,255,0.65)' }
+        : { trail: 'rgba(5,6,13,0.08)',      glyph: 'rgba(0,246,255,0.9)' };
+    }
+    refreshColors();
+
+    function resize(){ w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; cols=Math.floor(w/fontSize); drops=Array(cols).fill(0).map((_,i)=>Math.random()*(h/fontSize)); }
+    resize(); window.addEventListener('resize',resize);
+
+    function paintFrame(){
+      ctx.fillStyle=colors.trail; ctx.fillRect(0,0,w,h);
+      ctx.fillStyle=colors.glyph; ctx.font=fontSize+'px JetBrains Mono,monospace';
+      for (let i=0;i<drops.length;i++){
+        const ch=chars[Math.floor(Math.random()*chars.length)];
+        ctx.fillText(ch,i*fontSize,drops[i]*fontSize);
+        if(drops[i]*fontSize>h && Math.random()>0.985) drops[i]=0;
+        drops[i]++;
+      }
+    }
+    function draw(ts){
+      if (!running) return;
+      if (!lastDraw || ts - lastDraw >= frameInterval) { lastDraw = ts; paintFrame(); }
+      animFrame=requestAnimationFrame(draw);
+    }
+    function start(){
+      if (running) return;
+      running = true;
+      if (reduceMotion) { paintFrame(); return; } // 系统开启"减少动态效果"：只画一帧静态雨幕，保留赛博朋克质感但不持续动画
+      draw(performance.now());
+    }
+    function stop(){ running=false; if(animFrame) cancelAnimationFrame(animFrame); }
+    function themeChanged(){ refreshColors(); if (!running) paintFrame(); } // 主题切换时立刻换色，即使暂停中也重绘一帧避免残留旧主题颜色
+    start();
+    window.HandheldMatrix=window.HandheldMatrix||{}; window.HandheldMatrix.matrixRain={start,stop,themeChanged};
+  }
+
+  let compareModal = null;
+  function createCompareModal() {
+    const modal = document.createElement('div'); modal.id='compare-modal'; modal.className='compare-modal hidden';
+    modal.innerHTML='<div class="compare-inner"><div style="padding:20px 24px;border-bottom:1px solid rgba(0,122,255,0.1);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">'+
+      '<div><h2 style="font-family:\'Orbitron\',sans-serif;font-size:20px;letter-spacing:0.12em;color:var(--text-accent);margin:0;">[ MATRIX COMPARE ]</h2>'+
+      '<p style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--text-muted);margin:4px 0 0 0;">// DIFF ENGINE ONLINE</p></div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button id="btn-toggle-diff" class="compare-btn">[ TOGGLE DIFF ]</button><button id="btn-close-compare" class="compare-btn">✕ CLOSE</button></div>'+
+      '</div><div class="compare-content"><div class="radar-panel"><div style="display:flex;justify-content:space-between;margin-bottom:12px;"><span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text-muted);">[ RADAR OVERLAY ]</span></div><div class="radar-wrapper"><canvas id="radar-canvas"></canvas></div></div><div class="table-panel"><p style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text-muted);margin-bottom:12px;">[ SPEC MATRIX ]</p><table id="compare-table" class="compare-table" style="width:100%;"><thead><tr><th style="text-align:left;padding:10px 12px;border-bottom:1px solid rgba(0,122,255,0.1);color:var(--text-muted);">PARAM</th></tr></thead><tbody></tbody></table></div></div></div>';
+    document.body.appendChild(modal); return modal;
+  }
+
+  function openCompareModal() {
+    if (State.selected.size < 2) { showToast('[ NEED AT LEAST 2 DEVICES ]', 'pink'); return; }
+    if (!compareModal) compareModal = createCompareModal();
+    compareModal.classList.remove('hidden');
+    renderCompareContent();
+    const closeBtn = document.getElementById('btn-close-compare');
+    const toggleBtn = document.getElementById('btn-toggle-diff');
+    if (closeBtn) closeBtn.onclick = closeCompareModal;
+    if (toggleBtn) toggleBtn.onclick = toggleDiff;
+    compareModal.onclick = (e) => { if (e.target === compareModal) closeCompareModal(); };
+  }
+
+  function closeCompareModal() { if (!compareModal) return; compareModal.classList.add('hidden'); }
+  function toggleDiff() { State.diffMode = !State.diffMode; renderCompareTable(); showToast('[ DIFF MODE: '+ (State.diffMode?'ON':'OFF') +' ]', 'cyan'); }
+  function renderCompareContent() { renderCompareTable(); renderRadarChart(); }
+  function renderCompareTable() {
+    const table = document.getElementById('compare-table'); if (!table) return;
+    const ids = Array.from(State.selected); const devs = ids.map(id => getDeviceById(id)).filter(Boolean);
+    const thead = table.querySelector('thead tr');
+    thead.innerHTML = '<th style="text-align:left;padding:10px 12px;border-bottom:1px solid rgba(0,122,255,0.1);color:var(--text-muted);">PARAM</th>' + devs.map(d=>'<th class="device-col">'+d.name+'</th>').join('');
+    const tbody = table.querySelector('tbody');
+    const rows = [
+      {key:'price', label:'PRICE (CNY)', get:d=>d.price_cny, format:n=>n.toLocaleString(), better:'min'},
+      {key:'weight', label:'WEIGHT (g)', get:d=>d.weight_g, better:'min'},
+      {key:'battery', label:'BATTERY (Wh)', get:d=>d.battery_wh, better:'max'},
+      {key:'batteryH', label:'EST. BATTERY (h)', get:d=>d.estimated_battery_h, better:'max'},
+      {key:'screenSize', label:'SCREEN SIZE', get:d=>d.screen.size_inch, better:'max'},
+      {key:'screenType', label:'SCREEN TYPE', get:d=>d.screen.type, better:null},
+      {key:'refresh', label:'REFRESH (Hz)', get:d=>d.screen.refresh_hz, better:'max'},
+      {key:'cpu', label:'CPU', get:d=>d.hardware.cpu, better:null},
+      {key:'gpu', label:'GPU', get:d=>d.hardware.gpu, better:null},
+      {key:'ram', label:'RAM (GB)', get:d=>d.hardware.ram_gb, better:'max'},
+      {key:'perf', label:'SCORE: PERF', get:d=>d.scores.performance, better:'max'},
+      {key:'batt', label:'SCORE: BATT', get:d=>d.scores.battery, better:'max'},
+      {key:'scr', label:'SCORE: SCR', get:d=>d.scores.screen, better:'max'},
+      {key:'port', label:'SCORE: PORT', get:d=>d.scores.portability, better:'max'},
+      {key:'value', label:'SCORE: VALUE', get:d=>d.scores.value, better:'max'},
+      {key:'cool', label:'SCORE: COOL', get:d=>d.scores.cooling, better:'max'},
+    ];
+    tbody.innerHTML = rows.map(row=>{
+      const vals = devs.map(row.get); const allSame = vals.every(v => v === vals[0]);
+      let tds = '<td>'+row.label+'</td>';
+      devs.forEach((d,i)=>{
+        const val = vals[i]; let best = false;
+        if (row.better && devs.length>1 && !allSame && typeof val === 'number') {
+          const numVals = vals.filter(v=>typeof v==='number');
+          if (row.better === 'max') best = val === Math.max(...numVals);
+          else best = val === Math.min(...numVals);
+        }
+        let disp = row.format ? row.format(val) : (typeof val === 'number' ? val.toLocaleString() : (val ?? '—'));
+        tds += '<td '+ (best?'class="is-best"':'') +'>'+ disp +'</td>';
+      });
+      const hidden = State.diffMode && allSame && devs.length>1;
+      return '<tr '+ (hidden?'class="row-hidden" style="display:none;"':'') +'>'+ tds +'</tr>';
+    }).join('');
+  }
+
+  function renderRadarChart() {
+    const canvas = document.getElementById('radar-canvas'); if (!canvas) return;
+    if (typeof Chart === 'undefined') { canvas.innerHTML = '<p style="text-align:center;color:var(--text-muted);font-family:JetBrains Mono,monospace;">Chart.js loading...</p>'; return; }
+    const ids = Array.from(State.selected); const devs = ids.map(id => getDeviceById(id)).filter(Boolean); if (devs.length===0) return;
+    if (State.radarChart) { State.radarChart.destroy(); State.radarChart=null; }
+    const palette = [
+      {border:'var(--accent-blue)', bg:'rgba(0,246,255,0.15)'},
+      {border:'var(--accent-pink)', bg:'rgba(255,43,214,0.15)'},
+      {border:'var(--accent-purple)', bg:'rgba(139,92,246,0.15)'},
+      {border:'var(--accent-green)', bg:'rgba(57,255,20,0.15)'},
+    ];
+    const datasets = devs.map((d,i)=>({
+      label:d.name, data:[d.scores.performance,d.scores.battery,d.scores.screen,d.scores.portability,d.scores.value,d.scores.cooling],
+      borderColor:palette[i%palette.length].border, backgroundColor:palette[i%palette.length].bg, borderWidth:2,
+      pointBackgroundColor:palette[i%palette.length].border, pointBorderColor:'#fff', pointRadius:3
+    }));
+    const ctx = canvas.getContext('2d');
+    State.radarChart = new Chart(ctx, {
+      type:'radar', data:{labels:['PERF','BATT','SCR','PORT','VALUE','COOL'], datasets},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        scales:{r:{
+          min:0, max:100,
+          ticks:{color:'var(--text-muted)', backdropColor:'transparent', font:{size:9, family:'JetBrains Mono'}},
+          grid:{color:'rgba(0,122,255,0.15)'}, angleLines:{color:'rgba(0,122,255,0.1)'},
+          pointLabels:{color:'var(--text-secondary)', font:{size:10, family:'JetBrains Mono'}}
+        }},
+        plugins:{legend:{labels:{color:'var(--text-primary)', font:{family:'JetBrains Mono', size:11}}}}
+      }
+    });
+  }
+
+  // 隐藏启动遮罩（幂等，可安全多次调用）
+  function hideLoader() {
+    const loader = document.getElementById('init-loader');
+    if (loader) loader.classList.add('hidden');
+  }
+
+  // 保险丝：无论 init() 内部发生什么（网络异常/DOM异常/未来新增的 bug），
+  // 3 秒后强制隐藏启动遮罩，绝不让用户被卡死在加载页。
+  const bootFuse = setTimeout(() => {
+    hideLoader();
+    console.warn('[ BOOT FUSE TRIGGERED ] 初始化超时，已强制进入，请检查控制台错误');
+    showToast('[ 初始化超时，已强制进入 ]', 'orange');
+  }, 3000);
+
+  function init() {
+    try {
+      // 直接使用内嵌数据：零延迟、不依赖网络/file:// 权限，
+      // 这是本工具作为单文件本地应用的唯一数据源。
+      State.devices = EMBEDDED_DEVICES;
+
+      if (State.devices.length>0) {
+        const maxPrice = Math.ceil(Math.max(...State.devices.map(x=>x.price_cny))/500)*500;
+        const maxWeight = Math.ceil(Math.max(...State.devices.map(x=>x.weight_g))/100)*100;
+        MAX_PRICE = Math.max(maxPrice,10000); MAX_WEIGHT = Math.max(maxWeight,1500);
+        State.filters.price = [MIN_PRICE,MAX_PRICE]; State.filters.weight = [MIN_WEIGHT,MAX_WEIGHT];
+      }
+
+      let savedTheme = 'dark'; try { const st=localStorage.getItem('handheld-theme'); if(st==='light'||st==='dark') savedTheme=st; } catch(e){}
+      document.documentElement.setAttribute('data-theme', savedTheme); State.currentTheme = savedTheme; renderSysStatus(savedTheme);
+
+      const themeBtn = document.getElementById('theme-toggle');
+      if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+
+      renderCards(getDevices());
+      bindCardEvents();
+      renderClock();
+      setInterval(renderClock,1000);
+      setupScrollPause();
+
+      // 核心内容（卡片网格）已经就绪，先摘下遮罩，让用户立刻能看到东西，
+      // 而不是等特效面板、滑块这些"锦上添花"的部分也全部装好。
+      clearTimeout(bootFuse);
+      hideLoader();
+
+      // 双 rAF：等首帧真正绘制完成后再挂载滑块/搜索框等次要交互面板，
+      // 比固定 300ms 定时器更快、更跟手，视觉上没有"卡一下"的感觉。
+      requestAnimationFrame(() => requestAnimationFrame(loadFullInterface));
+    } catch (e) {
+      console.error('[ INIT ERROR ]', e);
+      clearTimeout(bootFuse);
+      hideLoader();
+      showToast('[ 初始化出错，部分功能可能异常 ]', 'pink');
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+
+  window.HandheldMatrix = { State, refreshAll, toggleTheme, openCompareModal };
+})();
+  </script>
+</body>
+</html>
