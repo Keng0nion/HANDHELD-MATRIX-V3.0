@@ -4,26 +4,54 @@
 - [English](README.en.md)
 - [Japanese](README.ja.md)
 
-# Handheld Matrix — Handheld Console Comparison Dashboard
+# HANDHELD MATRIX V3.0
 
-A pure front-end comparison dashboard for handheld gaming consoles, with full specs for 8 popular handhelds built in — so you can pick the right device by budget, weight, battery life, and screen preferences.
+A multi-dimensional comparison dashboard for 8 popular handheld consoles: search, filter, score, and radar-chart comparison to help you pick the handheld that fits you best.
 
-**How to use:** just open `index.html`. No build step, no account — all computation and rendering happen locally in your browser.
+![HANDHELD MATRIX dashboard](./docs/screenshot.png)
+
+🔗 **Use online**: [keng0nion.github.io/HANDHELD-MATRIX-V3.0](https://keng0nion.github.io/HANDHELD-MATRIX-V3.0/)
+
+---
 
 ## Features
 
-- **Multi-dimension spec cards**: price, weight, battery, screen (size / type / refresh rate / resolution / color gamut), and hardware, all at a glance
-- **Fuzzy search**: Fuse.js search with aliases (e.g. SD, Deck)
-- **Slider filters**: nouislider filtering by price and key specs
-- **Visualization**: Chart.js charts and a radar comparison panel
-- **MATRIX COMPARE**: select multiple devices and compare them side by side
-- **Poster export**: export the comparison as a PNG with html2canvas
-- **Details**: card 3D tilt + glare (vanilla-tilt), Lucide icons, dark / light themes
+- **Device cards**: price, battery, weight, screen, and hardware specs for 8 handhelds at a glance, with performance / battery / screen three-bar scoring
+- **MATRIX selector**: fuzzy search by name / brand / alias / CPU (Fuse.js), price and weight dual-slider filtering, one-click presets (Performance freak, Pure home console, OLED ONLY, 120Hz+, <500g, <¥1500)
+- **MATRIX COMPARE**: check multiple devices to enter the comparison panel — radar chart (Chart.js) + spec comparison table + TOGGLE DIFF highlighting
+- **Export poster**: html2canvas one-click export of the current view as an image
+- **Dark / light theme toggle**, HUD clock and system status decoration
 
-## Data
+---
 
-Device specs live in `devices.json`. To add a new handheld, just add an entry — the page reads it automatically.
+## Included devices
+
+| Device | Brand | Category | Price |
+|---|---|---|---|
+| Steam Deck OLED | Valve | PC handheld | ¥4,200 |
+| ROG Ally X | ASUS | PC handheld | ¥5,800 |
+| Legion Go 2 | Lenovo | PC handheld | ¥5,800 |
+| AYANEO 2S | AYANEO | PC handheld | ¥5,500 |
+| GPD WIN 4 (2025) | GPD | PC handheld | ¥5,300 |
+| Switch OLED | Nintendo | Home console | ¥2,200 |
+| Miyoo Mini Plus | Miyoo | Retro handheld | ¥400 |
+| Retroid Pocket 4 Pro | Retroid | Retro handheld | ¥1,300 |
+
+Prices and specs follow the `devices.json` data (priced in CNY).
+
+---
+
+## Run locally
+
+Pure static single page: after cloning, just double-click `index.html`, or host the whole directory with any static server.
+
+- `index.html` — the page and all logic
+- `devices.json` — handheld spec data
+
+External CDN dependencies (Fuse.js, Chart.js, nouislider, html2canvas, Lucide, vanilla-tilt); the first open requires internet.
+
+---
 
 ## License
 
-MIT
+[MIT](./LICENSE)
