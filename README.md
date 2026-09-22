@@ -1,2 +1,29 @@
-# HANDHELD-MATRIX-V3.0
-This project aims to help users select a handheld gaming device that suits their preferences.
+**目录：**
+
+- [中文版](README.md)
+- [英文版](README.en.md)
+- [日文版](README.ja.md)
+
+# Handheld Matrix — 掌机多维对比仪表盘
+
+一个纯前端的掌机多维对比仪表盘，内置 8 台主流掌机的完整参数，帮你按预算、重量、续航和屏幕偏好选出合适的设备。
+
+**使用方法：** 直接打开 `index.html` 即可。无需构建、无需账号，所有计算和渲染都在浏览器本地完成。
+
+## 功能
+
+- **多维参数卡**：价格、重量、电池、屏幕（尺寸／类型／刷新率／分辨率／色域）和硬件配置，一屏看全
+- **模糊搜索**：Fuse.js 搜索，支持别名（如 SD、Deck、V社）
+- **滑块筛选**：nouislider 按价格和关键参数过滤
+- **可视化**：Chart.js 图表和雷达对比面板
+- **MATRIX COMPARE**：选中多台设备并排对比
+- **导出海报**：html2canvas 把对比结果导出为 PNG
+- **细节**：卡片 3D 倾斜 + 高光扫光（vanilla-tilt）、Lucide 图标、深色／浅色主题
+
+## 数据
+
+设备参数保存在 `devices.json`，想加入新掌机就往里添加一条，页面会自动读取。
+
+## 许可证
+
+MIT
